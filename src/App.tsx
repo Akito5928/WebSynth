@@ -1,35 +1,36 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { useMidiPlayer } from "../core/player/midiPlayer";
+import { PianoRoll } from "./PianoRoll/PianoRoll";
+import { Controls } from "./Controls/Controls";
+import * as Tone from "tone";
+import { Midi } from "@tonejs/midi";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [midi, setMidi] = useState<any | null>(null);
+
+  const player = useMidiPlayer(midi);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) =>
+    {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const arrayBuffer = await file.arrayBuffer();
+      const midiData = new Midi(arrayBuffer);
+      setMidi(midiData);
+    };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="app">
+      <h1>WebSynth</h1>
 
-export default App
+      <input type="file" accept=".mid" onChange={handleFile} />
+
+      <Controls player={player} />
+
+      {midi && (
+        <PianoRoll midi={midi} currentTime={player.currentTime} />
+      )}
+    </div>
+  );
+}

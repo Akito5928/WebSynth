@@ -11,6 +11,7 @@ export function App() {
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const arrayBuffer = await file.arrayBuffer();
     const midi = await loadMidi(arrayBuffer);
     setMidiData(midi);
@@ -19,9 +20,21 @@ export function App() {
   return (
     <div>
       <h1>WebSynth</h1>
-      <input type="file" accept=".mid,.midi" onChange={onFileChange} />
+
+      <input
+        type="file"
+        accept=".mid,.midi"
+        onChange={onFileChange}
+      />
+
       <Controls player={player} />
-      <PianoRoll midi={midiData} currentTime={player.currentTime} />
+
+      {midiData && (
+        <PianoRoll
+          midi={midiData}
+          currentTime={player.currentTime}
+        />
+      )}
     </div>
   );
 }
