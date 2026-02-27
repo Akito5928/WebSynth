@@ -1,5 +1,31 @@
-/* WebSynth global styles */
 body {
   margin: 0;
   font-family: sans-serif;
+  background: #111;
+  color: white;
+}
+
+.container {
+  padding: 20px;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filename {
+  max-width: 400px; /* 必要ならもっと広げてもOK */
+  white-space: normal; /* 折り返し表示 */
+  word-break: break-all; /* 長い単語も折り返す */
+  padding: 4px 6px;
+  background: #222;
+  border-radius: 4px;
+}
+
+.controls {
+  margin: 10px 0;
+  display: flex;
+  gap: 10px;
 }

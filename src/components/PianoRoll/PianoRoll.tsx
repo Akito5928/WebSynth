@@ -1,18 +1,21 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect } from "react";
+import type { Midi } from "@tonejs/midi";
 
-type Props = {
-  midi: any | null;
+type PianoRollProps = {
+  midi: Midi | null;
   currentTime: number;
 };
 
-export function PianoRoll({ midi, currentTime }: Props) {
+export function PianoRoll({ midi, currentTime }: PianoRollProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     if (!midi) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const width = canvas.width;
@@ -23,11 +26,12 @@ export function PianoRoll({ midi, currentTime }: Props) {
     const track = midi.tracks[0];
     const pixelsPerSecond = 100;
 
-    track.notes.forEach((n: any) => {
+    track.notes.forEach((n) => {
       const x = (n.midi - 21) * 8;
       const y = height - (n.time - currentTime) * pixelsPerSecond;
       const h = n.duration * pixelsPerSecond;
-      ctx.fillStyle = '#4fc3f7';
+
+      ctx.fillStyle = "#4fc3f7";
       ctx.fillRect(x, y, 6, h);
     });
   }, [midi, currentTime]);
