@@ -18,7 +18,6 @@ export function useMidiPlayer(midi: any | null) {
   const synthRef = useRef<any>(null);
   const partRef = useRef<any>(null);
 
-  // WebAudioFontPlayer（UMD）
   const wafPlayerRef = useRef<any>(null);
   const wafToneRef = useRef<any>(null);
 
@@ -107,7 +106,6 @@ export function useMidiPlayer(midi: any | null) {
 
     await Tone.start();
 
-    // 古い Part を破棄
     if (partRef.current) {
       partRef.current.dispose();
       partRef.current = null;
@@ -119,12 +117,10 @@ export function useMidiPlayer(midi: any | null) {
       duration: n.duration
     }));
 
-    // Transport を完全リセット
     Tone.Transport.stop();
     Tone.Transport.position = 0;
-    Tone.Transport.cancel(); // ← 古いイベントを消す
+    Tone.Transport.cancel();
 
-    // Part をスケジュール（cancel の後）
     partRef.current = new Tone.Part((time, value) => {
       if (instrument === "synth" || instrument === "pad" || instrument === "chip") {
         synthRef.current.triggerAttackRelease(
@@ -147,9 +143,7 @@ export function useMidiPlayer(midi: any | null) {
       }
     }, events).start(0);
 
-    // Transport を開始
     Tone.Transport.start();
-
     setIsPlaying(true);
   };
 
@@ -162,7 +156,7 @@ export function useMidiPlayer(midi: any | null) {
     setIsPlaying(false);
   };
 
-  // currentTime を UI に流すループ（ノーツが動く）
+  // currentTime 更新
   useEffect(() => {
     let id: any;
 
@@ -175,21 +169,50 @@ export function useMidiPlayer(midi: any | null) {
     return () => clearInterval(id);
   }, [isPlaying]);
 
-  // WAV 書き出し
+  // WAV 書き出し（toneName 自動推測 + 強制 decode）
   const exportWav = async () => {
     if (!midi) return null;
 
+    const tone = wafToneRef.current;
+    if (!tone) {
+      alert("GM 音源がロードされていません。");
+      return null;
+    }
+
+    // ★ toneName を確実に取得（内部名 → variable → presetName → info → ファイル名）
+    let toneName =
+      tone.__WAF_name ||
+      tone.variable ||
+      tone.presetName ||
+      tone.info?.variable ||
+      null;
+
+    // ★ ファイル名から推測（例: ".../0000_FluidR3_GM_sf2_file.js" → "0000_FluidR3_GM_sf2_file"）
+    if (!toneName && tone.url) {
+      const match = tone.url.match(/\/([^\/]+)\.js$/);
+      if (match) toneName = match[1];
+    }
+
+    if (!toneName) {
+      alert("音源名が取得できません。");
+      return null;
+    }
+
+    // ★ 強制 decode（Tone.OfflineContext ではなく普通の AudioContext）
+    const tempCtx = new AudioContext();
+    const PlayerClass = (window as any).WebAudioFontPlayer;
+    const tempPlayer = new PlayerClass();
+
+    await tempPlayer.loader.decodeAfterLoading(tempCtx, toneName);
+
+    // ★ OfflineContext で WAV 書き出し
     const duration = midi.duration + 1;
     const offline = new Tone.OfflineContext(2, duration * 44100, 44100);
-
-    const PlayerClass = (window as any).WebAudioFontPlayer;
-    const player = new PlayerClass();
-    const tone = wafToneRef.current;
 
     const events = midi.tracks[0].notes;
 
     events.forEach((n: any) => {
-      player.queueWaveTable(
+      tempPlayer.queueWaveTable(
         offline.rawContext,
         offline.rawContext.destination,
         tone,
@@ -200,6 +223,7 @@ export function useMidiPlayer(midi: any | null) {
     });
 
     const buffer = await offline.render();
+
     const wav = await WavEncoder.encode({
       sampleRate: buffer.sampleRate,
       channelData: [buffer.getChannelData(0), buffer.getChannelData(1)]

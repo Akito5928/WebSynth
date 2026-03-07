@@ -1,6 +1,6 @@
 import { Midi } from "@tonejs/midi";
 
-export async function loadMidi(buffer: ArrayBuffer) {
-  const midi = new Midi(buffer);
-  return midi;
+export async function loadMidi(file: File) {
+  const arrayBuffer = await file.arrayBuffer();
+  return new Midi(arrayBuffer);
 }

@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useMidiPlayer } from "../core/player/midiPlayer";
-import { PianoRoll } from "./PianoRoll/PianoRoll";
-import { Controls } from "./Controls/Controls";
-import * as Tone from "tone";
+import { useMidiPlayer } from "./core/player/midiPlayer";
+import { PianoRoll } from "./components/PianoRoll/PianoRoll";
+import { Controls } from "./components/Controls/Controls";
 import { Midi } from "@tonejs/midi";
 
 export default function App() {
@@ -10,15 +9,14 @@ export default function App() {
 
   const player = useMidiPlayer(midi);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) =>
-    {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      const arrayBuffer = await file.arrayBuffer();
-      const midiData = new Midi(arrayBuffer);
-      setMidi(midiData);
-    };
+    const arrayBuffer = await file.arrayBuffer();
+    const midiData = new Midi(arrayBuffer);
+    setMidi(midiData);
+  };
 
   return (
     <div className="app">
